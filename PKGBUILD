@@ -37,9 +37,24 @@ prepare() {
 build() {
 	cd "$srcdir/$_pkgname-$_ver"
 
+	if [ "${CARCH}" == 'x86_64' ]; then
+		openssltarget='linux-x86_64'
+		optflags='enable-ec_nistp_64_gcc_128'
+	elif [ "${CARCH}" == 'i686' ]; then
+		openssltarget='linux-elf'
+		optflags=''
+	elif [ "${CARCH}" == 'arm' -o "${CARCH}" == 'armv6h' -o "${CARCH}" == 'armv7h' ]; then
+		openssltarget='linux-armv4'
+		optflags=''
+	elif [ "${CARCH}" == 'aarch64' ]; then
+		openssltarget='linux-aarch64'
+		optflags='no-afalgeng'
+	fi
+	
 	# mark stack as non-executable: http://bugs.archlinux.org/task/12434
 	./Configure --prefix=/usr --openssldir=/etc/ssl --libdir=lib \
-		shared no-ssl3-method enable-ec_nistp_64_gcc_128 linux-x86_64 \
+		shared no-ssl3-method ${optflags}  \
+		"${openssltarget}" \
 		"-Wa,--noexecstack ${CPPFLAGS} ${CFLAGS} ${LDFLAGS}"
 
 	make depend
